@@ -85,32 +85,43 @@ else:
     st.write("---")
 
     # --- ALT PANEL: AI CHAT ---
+    # --- ALT PANEL: %100 DİNAMİK CHAT ---
     st.markdown("<h3 style='color: #ffcc00;'>💬 Creative Memory Assistant</h3>", unsafe_allow_html=True)
     chat_input = st.chat_input("Hafızanla rastgele konuş...")
 
     if chat_input:
         conn = sqlite3.connect('glimpse_memory.db')
-        mems = [r[0] for r in conn.execute("SELECT info FROM screenshots").fetchall() if r[0]]
+        # Veritabanındaki tüm kayıtları çekip listeye atıyoruz
+        all_rows = [r[0] for r in conn.execute("SELECT info FROM screenshots").fetchall() if r[0]]
         conn.close()
 
-        # 🧠 RASTGELE CEVAP MOTORU (Özgünlük Katmanı)
-        giris_tr = ["Valla baktım da,", "Hafızanı şöyle bir yokladım,", "Analizlerime göre,", "Gördüğüm kadarıyla,",
-                    "Enteresan bir detay buldum:"]
-        giris_en = ["I've scanned your mind,", "Based on my analysis,", "Looking at your 5 memories,", "Interestingly,",
-                    "Here is what I found:"]
+        if not all_rows: all_rows = ["Genel teknoloji verileri"]
 
-        tespit_tr = ["teknik konulara gömülmüşsün.", "yazılım dünyasında bir yolculuğa çıkmışsın.",
-                     "ekranında kodlar ve veriler uçuşuyor.", "öğrenme sürecin son gaz devam ediyor."]
-        tespit_en = ["you're deep into coding.", "your screen is full of technical data.",
-                     "you are exploring new software horizons.", "productivity is at its peak."]
+        # Rastgele bir giriş ve rastgele bir hafıza seçiyoruz (Kritik Nokta!)
+        giris_secenekleri = [
+            "Valla baktım da,", "Hafızanı şöyle bir yokladım,",
+            "Analizlerime göre,", "Gördüğüm kadarıyla,",
+            "Enteresan bir detay buldum:", "Sistem taraması bitti:"
+        ]
+
+        # Her seferinde listeden rastgele bir hafıza parçasını seç (Hep aynı mems[0] olmasın)
+        rastgele_hafiza = random.choice(all_rows)
+        rastgele_giris = random.choice(giris_secenekleri)
 
         user_q = chat_input.lower()
-        is_en = any(w in user_q for w in ['hi', 'how', 'what', 'hello'])
 
-        # Dinamik Cevap Oluşturma
-        if is_en:
-            res = f"{random.choice(giris_en)} {random.choice(tespit_en)} Your focus is mainly on {mems[0][:30]}..."
+        # Soruya göre bir ton belirle
+        if "kod" in user_q or "python" in user_q:
+            res = f"💻 {rastgele_giris} Yazılım tarafında yoğunlaşmışsın. Özellikle şu kaydın dikkat çekici: '{rastgele_hafiza[:50]}...'"
+        elif "naber" in user_q or "nasılsın" in user_q:
+            res = f"🦁 {rastgele_giris} Hafızandaki 5 farklı anıyı harmanladım. Şu an tam bir 'Digital Nomad' havasındasın!"
         else:
-            res = f"{random.choice(giris_tr)} {random.choice(tespit_tr)} Özellikle '{mems[0][:40]}...' gibi konular radarımda."
+            # Kodda olmayan bir şey sorulursa her seferinde farklı bir cevap üret
+            res = f"🔍 {rastgele_giris} Sorduğun konuyu araştırdım. Hafızanda şuna benzer bir şeyler var: '{rastgele_hafiza[:60]}...'"
 
         st.session_state.chat_history.append({"u": chat_input, "ai": res})
+
+    # Sohbeti Ekrana Yazdır
+    for chat in reversed(st.session_state.chat_history):
+        st.markdown(f"<div style='text-align:right; color:#888;'>Siz: {chat['u']}</div>", unsafe_allow_html=True)
+        st.markdown(f"<div class='chat-bubble'>🦁 AI: {chat['ai']}</div>", unsafe_allow_html=True)
