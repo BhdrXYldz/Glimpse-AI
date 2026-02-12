@@ -85,60 +85,69 @@ else:
     st.write("---")
 
     # --- ALT PANEL: AI CHAT ---
-    # --- ALT PANEL: GLOBAL & DİNAMİK CHAT ---
-    st.markdown("<h3 style='color: #ffcc00;'>💬 Smart Memory Assistant</h3>", unsafe_allow_html=True)
-    chat_input = st.chat_input("Talk to your memory / Hafızanla konuş...")
+    # --- ALT PANEL: %100 GLOBAL ENGLISH MASTER CHAT ---
+    st.markdown("<h3 style='color: #ffcc00;'>💬 Glimpse AI Global Assistant</h3>", unsafe_allow_html=True)
+    chat_input = st.chat_input("Ask your memory anything (English only)...")
 
     if chat_input:
         conn = sqlite3.connect('glimpse_memory.db')
         all_rows = [r[0] for r in conn.execute("SELECT info FROM screenshots").fetchall() if r[0]]
         conn.close()
 
-        if not all_rows: all_rows = ["Data analysis session"]
-
         user_q = chat_input.lower()
-        rastgele_hafiza = random.choice(all_rows)[:65]
+        # Her seferinde farklı bir anıyı çekerek özgünlüğü koruyoruz
+        memory_fragment = random.choice(all_rows)[:75] if all_rows else "a visual data point"
 
-        # 🌍 Gelişmiş İngilizce Tespiti
-        en_words = ['how', 'what', 'hi', 'hello', 'up', 'doing', 'bad', 'sad', 'good', 'hey']
-        is_en = any(word in user_q for word in en_words)
+        # --- EN GENİŞ İNGİLİZCE HAVUZU MANTIĞI ---
 
-        if is_en:
-            # 🇬🇧 İNGİLİZCE CEVAP HAVUZU (Çeşitli)
-            if any(w in user_q for w in ['how', 'up', 'doing']):
-                en_res = [
-                    "I'm functioning perfectly! Ready to dive into your 5 memories. 🦁",
-                    "Doing great! I've been busy indexing your technical data all day.",
-                    "All systems go! Your visual history looks quite productive today."
-                ]
-            elif any(w in user_q for w in ['bad', 'sad', 'tired']):
-                en_res = ["Take a break, Bahadır! Your logs show you've been working hard. Go grab a coffee! ☕"]
-            else:
-                en_res = [
-                    f"I found this in your history: '{rastgele_hafiza}...' Looks interesting!",
-                    f"Scanning your past... Oh, you were looking at: {rastgele_hafiza}...",
-                    "I see a lot of coding and tech activity in your recent memories."
-                ]
-            res = random.choice(en_res)
+        # 1. Selamlaşma & Tanışma (Greetings)
+        if any(w in user_q for w in ['hi', 'hello', 'hey', 'morning', 'greetings', 'who are you', 'what is your name']):
+            res = random.choice([
+                "Hello Bahadır! I am Glimpse AI, your personal visual memory assistant. How can I help?",
+                "Hi there! Ready to explore your digital history. Ask me about your screenshots!",
+                "Greetings! I've analyzed your 5 memories and I'm ready for your questions."
+            ])
 
+        # 2. Durum & Hal Hatır (Status & Mood)
+        elif any(w in user_q for w in ['how are you', 'how is it going', 'whats up', 'status', 'working']):
+            res = random.choice([
+                "I'm functioning perfectly at 100% efficiency! 🦁",
+                "Systems are green! I've successfully indexed your latest visual data.",
+                "Doing great! Your 5 memories are stored and analyzed for your convenience."
+            ])
+
+        # 3. Sevgi & Övgü (Appreciation)
+        elif any(w in user_q for w in ['love', 'awesome', 'great', 'cool', 'good job', 'wow', 'amazing']):
+            res = random.choice([
+                "🦁 Thank you! I'm dedicated to providing the best visual intelligence for you.",
+                "I appreciate the positive feedback! Always here to assist your workflow.",
+                "Love you too, buddy! Let's keep making your data useful."
+            ])
+
+        # 4. Teknik & Yazılım (Tech & Code)
+        elif any(w in user_q for w in ['code', 'python', 'sql', 'tech', 'data', 'programming', 'script']):
+            res = f"💻 Technical analysis: I found several coding patterns in your history, specifically related to: {memory_fragment}..."
+
+        # 5. Teşekkür (Gratitude)
+        elif any(w in user_q for w in ['thanks', 'thank you', 'thx']):
+            res = "You're very welcome! Feel free to ask more about your visual memory. 🦁"
+
+        # 6. Negatif Durumlar (Negative/Tired Sentiment)
+        elif any(w in user_q for w in ['bad', 'sad', 'tired', 'bored', 'exhausted']):
+            res = "I noticed some low energy. You've been working hard according to my logs! Why not take a short break? ☕"
+
+        # 7. HER ŞEYİ KAPSAYAN FALLBACK (Kodda olmayan her şey için)
         else:
-            # 🇹🇷 TÜRKÇE CEVAP HAVUZU
-            if any(w in user_q for w in ["kötü", "mutsuz", "yorgun", "berbat"]):
-                res = "🦁 Canını sıkma knk! Hafızandaki verilere bakılırsa bugün bayağı yol kat etmişsin. Bir kahve molası ver, sonra aslanlar gibi devam ederiz! ☕"
-            elif "naber" in user_q or "nasılsın" in user_q:
-                res = random.choice(
-                    ["Bomba gibiyim! 5 anın da bende güvende. 🦁", "Harikayım! Senin için veritabanını tarıyorum.",
-                     "Süper! Bugün yine teknoloji dolu bir gün."])
-            else:
-                res = random.choice([
-                    f"🔍 Hafızanı yokladım, şuna benzer bir şeyler var: {rastgele_hafiza}...",
-                    f"🔍 Gördüğüm kadarıyla şu konuyla ilgilenmişsin: {rastgele_hafiza}...",
-                    f"🔍 Analizlerime göre ekranında en son şunlar varmış: {rastgele_hafiza}..."
-                ])
+            res = random.choice([
+                f"Based on my deep scan, I see you were recently busy with: {memory_fragment}...",
+                f"I've cross-referenced your query with your 5 memories. I found matches related to: {memory_fragment}...",
+                "Interesting question! While I don't have a direct answer, your history shows a lot of activity in this area.",
+                f"My AI brain suggests that you've been exploring: {memory_fragment} lately."
+            ])
 
         st.session_state.chat_history.append({"u": chat_input, "ai": res})
 
-    # Sohbet Akışı
+    # Render Sohbet
     for chat in reversed(st.session_state.chat_history):
-        st.markdown(f"<div style='text-align:right; color:#888;'>Siz: {chat['u']}</div>", unsafe_allow_html=True)
+        st.markdown(f"<div style='text-align:right; color:#888;'>User: {chat['u']}</div>", unsafe_allow_html=True)
         st.markdown(f"<div class='chat-bubble'>🦁 AI: {chat['ai']}</div>", unsafe_allow_html=True)
