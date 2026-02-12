@@ -85,56 +85,60 @@ else:
     st.write("---")
 
     # --- ALT PANEL: AI CHAT ---
-    # --- ALT PANEL: %100 DÜZGÜN & DİNAMİK CHAT ---
-    st.markdown("<h3 style='color: #ffcc00;'>💬 Smart Assistant</h3>", unsafe_allow_html=True)
-    chat_input = st.chat_input("Hafızanla konuş / Talk to your memory...")
+    # --- ALT PANEL: GLOBAL & DİNAMİK CHAT ---
+    st.markdown("<h3 style='color: #ffcc00;'>💬 Smart Memory Assistant</h3>", unsafe_allow_html=True)
+    chat_input = st.chat_input("Talk to your memory / Hafızanla konuş...")
 
     if chat_input:
         conn = sqlite3.connect('glimpse_memory.db')
         all_rows = [r[0] for r in conn.execute("SELECT info FROM screenshots").fetchall() if r[0]]
         conn.close()
 
-        if not all_rows: all_rows = ["Technical data / Teknik veriler"]
+        if not all_rows: all_rows = ["Data analysis session"]
 
         user_q = chat_input.lower()
-        rastgele_hafiza = random.choice(all_rows)[:60]  # Rastgele bir anı seç
+        rastgele_hafiza = random.choice(all_rows)[:65]
 
-        # 🌍 DİL TESPİTİ
-        is_en = any(w in user_q for w in ['hi', 'hello', 'how', 'what', 'did', 'hey'])
+        # 🌍 Gelişmiş İngilizce Tespiti
+        en_words = ['how', 'what', 'hi', 'hello', 'up', 'doing', 'bad', 'sad', 'good', 'hey']
+        is_en = any(word in user_q for word in en_words)
 
         if is_en:
-            # İNGİLİZCE CEVAPLAR
-            responses = [
-                f"I've scanned your mind. You seem focused on: {rastgele_hafiza}...",
-                f"Based on my analysis, you've been busy with technical tasks like {rastgele_hafiza}...",
-                f"I found something interesting! Your memory contains: {rastgele_hafiza}...",
-                "I'm doing great! Ready to help you navigate through your 5 memories."
-            ]
-            res = random.choice(responses)
-        else:
-            # TÜRKÇE CEVAPLAR
-            if "naber" in user_q or "nasılsın" in user_q:
-                responses = [
-                    "Bomba gibiyim! Hafızandaki 5 anıyı senin için saklıyorum. 🦁",
-                    "Harikayım! Bugün yine çok üretkensin, verilerin öyle söylüyor.",
-                    "Sistemler tıkır tıkır çalışıyor. Senin için neyi bulmamı istersin?"
+            # 🇬🇧 İNGİLİZCE CEVAP HAVUZU (Çeşitli)
+            if any(w in user_q for w in ['how', 'up', 'doing']):
+                en_res = [
+                    "I'm functioning perfectly! Ready to dive into your 5 memories. 🦁",
+                    "Doing great! I've been busy indexing your technical data all day.",
+                    "All systems go! Your visual history looks quite productive today."
                 ]
-            elif "kod" in user_q or "python" in user_q:
-                responses = [
-                    f"💻 Yazılım modu açık! Hafızanda şunu buldum: {rastgele_hafiza}...",
-                    f"💻 Kodlarla aran iyi görünüyor. Özellikle şuna bakmışsın: {rastgele_hafiza}..."
-                ]
+            elif any(w in user_q for w in ['bad', 'sad', 'tired']):
+                en_res = ["Take a break, Bahadır! Your logs show you've been working hard. Go grab a coffee! ☕"]
             else:
-                responses = [
+                en_res = [
+                    f"I found this in your history: '{rastgele_hafiza}...' Looks interesting!",
+                    f"Scanning your past... Oh, you were looking at: {rastgele_hafiza}...",
+                    "I see a lot of coding and tech activity in your recent memories."
+                ]
+            res = random.choice(en_res)
+
+        else:
+            # 🇹🇷 TÜRKÇE CEVAP HAVUZU
+            if any(w in user_q for w in ["kötü", "mutsuz", "yorgun", "berbat"]):
+                res = "🦁 Canını sıkma knk! Hafızandaki verilere bakılırsa bugün bayağı yol kat etmişsin. Bir kahve molası ver, sonra aslanlar gibi devam ederiz! ☕"
+            elif "naber" in user_q or "nasılsın" in user_q:
+                res = random.choice(
+                    ["Bomba gibiyim! 5 anın da bende güvende. 🦁", "Harikayım! Senin için veritabanını tarıyorum.",
+                     "Süper! Bugün yine teknoloji dolu bir gün."])
+            else:
+                res = random.choice([
                     f"🔍 Hafızanı yokladım, şuna benzer bir şeyler var: {rastgele_hafiza}...",
                     f"🔍 Gördüğüm kadarıyla şu konuyla ilgilenmişsin: {rastgele_hafiza}...",
                     f"🔍 Analizlerime göre ekranında en son şunlar varmış: {rastgele_hafiza}..."
-                ]
-            res = random.choice(responses)
+                ])
 
         st.session_state.chat_history.append({"u": chat_input, "ai": res})
 
-    # Sohbet Geçmişi
+    # Sohbet Akışı
     for chat in reversed(st.session_state.chat_history):
         st.markdown(f"<div style='text-align:right; color:#888;'>Siz: {chat['u']}</div>", unsafe_allow_html=True)
         st.markdown(f"<div class='chat-bubble'>🦁 AI: {chat['ai']}</div>", unsafe_allow_html=True)
