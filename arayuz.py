@@ -15,16 +15,19 @@ st.markdown("""
     </style>
     """, unsafe_allow_html=True)
 
-# 3. YAN MENÜ
+# 3. YAN MENÜ (Kontrol Paneli)
 with st.sidebar:
     st.image("https://img.icons8.com/clouds/200/lion.png", width=100)
     st.title("Glimpse Control")
     st.write("---")
+    # İşte buraya o 3'lü kalkanı ekledik:
     ocr_active = st.toggle("OCR Recognition", value=True)
     privacy_active = st.toggle("Privacy Shield", value=True)
+    alerts_active = st.toggle("Smart Notifications", value=True)  # ARTIK GÖRÜNÜYOR!
+
     st.write("---")
     st.success("🧠 Brain & Cloud: Connected")
-    st.metric(label="Memories Analysed", value="5")
+    st.metric(label="Total Memories", value="5")
     st.caption("Developed by Bahadır Yıldız")
 
 # 4. GİRİŞ KONTROLÜ
@@ -37,17 +40,14 @@ if not st.session_state.giris_yapildi:
         st.session_state.giris_yapildi = True
         st.rerun()
 else:
+    # --- SMART NOTIFICATION (Bildirim Fırlatma) ---
+    if alerts_active:
+        st.toast("🦁 AI: 5 memories analyzed. Ready to search!", icon="💡")
+
     # --- ÜST PANEL: ARAMA MOTORU ---
     st.markdown("<h2 style='color: #ffcc00;'>🔍 Visual Memory Search</h2>", unsafe_allow_html=True)
 
-    # Hızlı Kategori Butonları
-    c1, c2, c3 = st.columns(3)
-    q_cat = ""
-    if c1.button("💻 Code"): q_cat = "code"
-    if c2.button("🦁 GS"): q_cat = "football"
-    if c3.button("📂 All"): q_cat = ""
-
-    query = st.text_input("", value=q_cat, placeholder="Search (e.g. yellow, laptop, terminal)")
+    query = st.text_input("Search (e.g. yellow, code, laptop)", placeholder="Find anything...")
 
     if query:
         conn = sqlite3.connect('glimpse_memory.db')
@@ -59,7 +59,6 @@ else:
         results = [r for r in rows if r[1] and query.lower() in r[1].lower()]
 
         if results:
-            st.write(f"Results for '{query}':")
             cols = st.columns(3)
             for i, (path, info, date) in enumerate(results):
                 with cols[i % 3]:
@@ -71,42 +70,27 @@ else:
                             "<div style='height:120px; background:repeating-linear-gradient(45deg,#333,#333 10px,#222 10px,#222 20px); border-radius:10px;'></div>",
                             unsafe_allow_html=True)
                     else:
-                        if os.path.exists(path):
-                            st.image(path)
-                        else:
-                            st.markdown(
-                                "<div style='height:120px; background:#222; border-radius:10px; display:flex; align-items:center; justify-content:center;'>🖼️ Memory</div>",
-                                unsafe_allow_html=True)
+                        st.markdown(
+                            "<div style='height:120px; background:#222; border-radius:10px; display:flex; align-items:center; justify-content:center;'>🖼️ Memory Image</div>",
+                            unsafe_allow_html=True)
 
                     # Analiz Kartı
                     st.markdown(f"""<div class="status-card">
                         <p style='color:#ffcc00; font-size:0.8em;'><b>AI CAPTION:</b></p>
                         <p style='font-size:0.9em;'>"{info}"</p>""", unsafe_allow_html=True)
                     if ocr_active:
-                        st.markdown(f"<div class='ocr-box'>OCR: [Text Detected]</div>", unsafe_allow_html=True)
+                        st.markdown(f"<div class='ocr-box'>OCR: [Text Content Detected]</div>", unsafe_allow_html=True)
                     st.markdown(f"<small style='color:#888;'>📅 {date[:10]}</small></div>", unsafe_allow_html=True)
 
     st.write("---")
 
-    # --- ALT PANEL: AI CHAT (Yeni Bölüm) ---
+    # --- ALT PANEL: AI CHAT ---
     st.markdown("<h3 style='color: #ffcc00;'>💬 Ask Your Brain</h3>", unsafe_allow_html=True)
-    chat_input = st.chat_input("Ask: 'What did I learn about SQL today?'")
+    chat_input = st.chat_input("Ask: 'What did I work on?'")
 
     if chat_input:
-        conn = sqlite3.connect('glimpse_memory.db')
-        all_text = " ".join([r[0] for r in conn.execute("SELECT info FROM screenshots").fetchall() if r[0]])
-        conn.close()
-
-        # Basit AI Mantığı
-        reply = "I've scanned your 5 visual memories. "
-        if "code" in chat_input.lower():
-            reply += "You spent time on coding and software development."
-        elif "bugün" in chat_input.lower() or "today" in chat_input.lower():
-            reply += f"Summary of your day: {all_text[:120]}..."
-        else:
-            reply += "I found information related to your Galatasaray interest and tech stack."
-
-        st.session_state.chat_history.append({"u": chat_input, "ai": reply})
+        res = "I found 5 memories related to your search. You have records about Galatasaray and Coding."
+        st.session_state.chat_history.append({"u": chat_input, "ai": res})
 
     for chat in reversed(st.session_state.chat_history):
         st.markdown(f"<div style='text-align:right;'>👤 {chat['u']}</div>", unsafe_allow_html=True)
