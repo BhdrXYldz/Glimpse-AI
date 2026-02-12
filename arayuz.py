@@ -85,43 +85,56 @@ else:
     st.write("---")
 
     # --- ALT PANEL: AI CHAT ---
-    # --- ALT PANEL: %100 DİNAMİK CHAT ---
-    st.markdown("<h3 style='color: #ffcc00;'>💬 Creative Memory Assistant</h3>", unsafe_allow_html=True)
-    chat_input = st.chat_input("Hafızanla rastgele konuş...")
+    # --- ALT PANEL: %100 DÜZGÜN & DİNAMİK CHAT ---
+    st.markdown("<h3 style='color: #ffcc00;'>💬 Smart Assistant</h3>", unsafe_allow_html=True)
+    chat_input = st.chat_input("Hafızanla konuş / Talk to your memory...")
 
     if chat_input:
         conn = sqlite3.connect('glimpse_memory.db')
-        # Veritabanındaki tüm kayıtları çekip listeye atıyoruz
         all_rows = [r[0] for r in conn.execute("SELECT info FROM screenshots").fetchall() if r[0]]
         conn.close()
 
-        if not all_rows: all_rows = ["Genel teknoloji verileri"]
-
-        # Rastgele bir giriş ve rastgele bir hafıza seçiyoruz (Kritik Nokta!)
-        giris_secenekleri = [
-            "Valla baktım da,", "Hafızanı şöyle bir yokladım,",
-            "Analizlerime göre,", "Gördüğüm kadarıyla,",
-            "Enteresan bir detay buldum:", "Sistem taraması bitti:"
-        ]
-
-        # Her seferinde listeden rastgele bir hafıza parçasını seç (Hep aynı mems[0] olmasın)
-        rastgele_hafiza = random.choice(all_rows)
-        rastgele_giris = random.choice(giris_secenekleri)
+        if not all_rows: all_rows = ["Technical data / Teknik veriler"]
 
         user_q = chat_input.lower()
+        rastgele_hafiza = random.choice(all_rows)[:60]  # Rastgele bir anı seç
 
-        # Soruya göre bir ton belirle
-        if "kod" in user_q or "python" in user_q:
-            res = f"💻 {rastgele_giris} Yazılım tarafında yoğunlaşmışsın. Özellikle şu kaydın dikkat çekici: '{rastgele_hafiza[:50]}...'"
-        elif "naber" in user_q or "nasılsın" in user_q:
-            res = f"🦁 {rastgele_giris} Hafızandaki 5 farklı anıyı harmanladım. Şu an tam bir 'Digital Nomad' havasındasın!"
+        # 🌍 DİL TESPİTİ
+        is_en = any(w in user_q for w in ['hi', 'hello', 'how', 'what', 'did', 'hey'])
+
+        if is_en:
+            # İNGİLİZCE CEVAPLAR
+            responses = [
+                f"I've scanned your mind. You seem focused on: {rastgele_hafiza}...",
+                f"Based on my analysis, you've been busy with technical tasks like {rastgele_hafiza}...",
+                f"I found something interesting! Your memory contains: {rastgele_hafiza}...",
+                "I'm doing great! Ready to help you navigate through your 5 memories."
+            ]
+            res = random.choice(responses)
         else:
-            # Kodda olmayan bir şey sorulursa her seferinde farklı bir cevap üret
-            res = f"🔍 {rastgele_giris} Sorduğun konuyu araştırdım. Hafızanda şuna benzer bir şeyler var: '{rastgele_hafiza[:60]}...'"
+            # TÜRKÇE CEVAPLAR
+            if "naber" in user_q or "nasılsın" in user_q:
+                responses = [
+                    "Bomba gibiyim! Hafızandaki 5 anıyı senin için saklıyorum. 🦁",
+                    "Harikayım! Bugün yine çok üretkensin, verilerin öyle söylüyor.",
+                    "Sistemler tıkır tıkır çalışıyor. Senin için neyi bulmamı istersin?"
+                ]
+            elif "kod" in user_q or "python" in user_q:
+                responses = [
+                    f"💻 Yazılım modu açık! Hafızanda şunu buldum: {rastgele_hafiza}...",
+                    f"💻 Kodlarla aran iyi görünüyor. Özellikle şuna bakmışsın: {rastgele_hafiza}..."
+                ]
+            else:
+                responses = [
+                    f"🔍 Hafızanı yokladım, şuna benzer bir şeyler var: {rastgele_hafiza}...",
+                    f"🔍 Gördüğüm kadarıyla şu konuyla ilgilenmişsin: {rastgele_hafiza}...",
+                    f"🔍 Analizlerime göre ekranında en son şunlar varmış: {rastgele_hafiza}..."
+                ]
+            res = random.choice(responses)
 
         st.session_state.chat_history.append({"u": chat_input, "ai": res})
 
-    # Sohbeti Ekrana Yazdır
+    # Sohbet Geçmişi
     for chat in reversed(st.session_state.chat_history):
         st.markdown(f"<div style='text-align:right; color:#888;'>Siz: {chat['u']}</div>", unsafe_allow_html=True)
         st.markdown(f"<div class='chat-bubble'>🦁 AI: {chat['ai']}</div>", unsafe_allow_html=True)
