@@ -1,7 +1,7 @@
 import streamlit as st
 import sqlite3
 import os
-
+import random
 # 1. SAYFA AYARLARI
 st.set_page_config(page_title="Glimpse AI: Master 🦁", layout="wide")
 
@@ -85,13 +85,32 @@ else:
     st.write("---")
 
     # --- ALT PANEL: AI CHAT ---
-    st.markdown("<h3 style='color: #ffcc00;'>💬 Ask Your Brain</h3>", unsafe_allow_html=True)
-    chat_input = st.chat_input("Ask: 'What did I work on?'")
+    st.markdown("<h3 style='color: #ffcc00;'>💬 Creative Memory Assistant</h3>", unsafe_allow_html=True)
+    chat_input = st.chat_input("Hafızanla rastgele konuş...")
 
     if chat_input:
-        res = "I found 5 memories related to your search. You have records about Galatasaray and Coding."
-        st.session_state.chat_history.append({"u": chat_input, "ai": res})
+        conn = sqlite3.connect('glimpse_memory.db')
+        mems = [r[0] for r in conn.execute("SELECT info FROM screenshots").fetchall() if r[0]]
+        conn.close()
 
-    for chat in reversed(st.session_state.chat_history):
-        st.markdown(f"<div style='text-align:right;'>👤 {chat['u']}</div>", unsafe_allow_html=True)
-        st.markdown(f"<div class='chat-bubble'>🦁 {chat['ai']}</div>", unsafe_allow_html=True)
+        # 🧠 RASTGELE CEVAP MOTORU (Özgünlük Katmanı)
+        giris_tr = ["Valla baktım da,", "Hafızanı şöyle bir yokladım,", "Analizlerime göre,", "Gördüğüm kadarıyla,",
+                    "Enteresan bir detay buldum:"]
+        giris_en = ["I've scanned your mind,", "Based on my analysis,", "Looking at your 5 memories,", "Interestingly,",
+                    "Here is what I found:"]
+
+        tespit_tr = ["teknik konulara gömülmüşsün.", "yazılım dünyasında bir yolculuğa çıkmışsın.",
+                     "ekranında kodlar ve veriler uçuşuyor.", "öğrenme sürecin son gaz devam ediyor."]
+        tespit_en = ["you're deep into coding.", "your screen is full of technical data.",
+                     "you are exploring new software horizons.", "productivity is at its peak."]
+
+        user_q = chat_input.lower()
+        is_en = any(w in user_q for w in ['hi', 'how', 'what', 'hello'])
+
+        # Dinamik Cevap Oluşturma
+        if is_en:
+            res = f"{random.choice(giris_en)} {random.choice(tespit_en)} Your focus is mainly on {mems[0][:30]}..."
+        else:
+            res = f"{random.choice(giris_tr)} {random.choice(tespit_tr)} Özellikle '{mems[0][:40]}...' gibi konular radarımda."
+
+        st.session_state.chat_history.append({"u": chat_input, "ai": res})
